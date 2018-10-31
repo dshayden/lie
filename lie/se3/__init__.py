@@ -1,8 +1,8 @@
 import numpy as np
-from scipy.linalg import expm, logm
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal as mvn
-from .. import so3
+import lie
+from lie import so3
 
 dof = 6
 n = 4
@@ -34,7 +34,64 @@ def algi(C):
   OUTPUT
     c (ndarray, [6,]): vector of se(3) coefficients.
   """
-  return np.array([ C[0, 3], C[1, 3], C[2, 3], C[1, 2], C[2, 0], C[0, 1] ])
+  u = C[:3, 3]
+  phi = so3.algi(C[:3,:3])
+  return np.concatenate((u, phi))
+
+def expm(X):
+  wx = X[:3,:3]
+  wx2 = wx.dot(wx)
+
+  w = so3.algi(wx)
+  t2 = w.T.dot(w)
+  t = np.sqrt(t2)
+  eye = np.eye(3)
+
+  if t2 < 1e-2:
+    A = lie.TaylorSinXoverX(t)
+    B = lie.TaylorOneMinusCosXOverX2(t)
+    C = lie.TaylorOneMinusSinXOverXOverX2(t)
+  else:
+    st = np.sin(t)
+    ct = np.cos(t)
+    A = st/t
+    B = (1-ct)/t2
+    C = (1-A)/t2
+
+  R = eye + A*wx + B*wx2
+  V = eye + B*wx + C*wx2
+  u = X[:3,3]
+  Vu = V.dot(u)
+
+  return np.concatenate((
+    np.concatenate(( R, Vu[:,np.newaxis]), axis=1),
+    np.array([[0, 0, 0, 1]])))
+
+def logm(X): 
+  R = X[:3,:3]
+  d = X[:3,3]
+
+  logR = lie.so3.logm(R)
+  logR2 = logR.dot(logR)
+  w = lie.so3.algi(logR)
+  t2 = w.T.dot(w)
+  t = np.sqrt(t2)
+
+  if t2 < 1e-2:
+    A = lie.TaylorSinXoverX(t)
+    B = lie.TaylorOneMinusCosXOverX2(t)
+    if t2 == 0: coeff = 1 # should this be 1 or 0 or ... ?
+    else: coeff = 1/t2
+  else:
+    A = np.sin(t)/t
+    B = (1 - np.cos(t))/t2
+    coeff = 1/t2
+
+  Vi = np.eye(n-1) - 0.5*logR + coeff*(1 - A/(2*B))*logR2
+  u = Vi.dot(d)
+  return np.concatenate((
+    np.concatenate((logR, u[:,np.newaxis]), axis=1),
+    np.array([[0, 0, 0, 0]])))
 
 def Adj(X):
   """ Return Adj_X for X an element of SE(3)
@@ -112,7 +169,7 @@ def dist2(X, Y, c=1, d=1):
   R1, t1 = Rt(X)
   R2, t2 = Rt(Y)
   R1i = R1.T
-  term1 = np.linalg.norm(so3.algi(logm(R1i.dot(R2))))**2
+  term1 = np.linalg.norm(so3.algi(so3.logm(R1i.dot(R2))))**2
   term2 = np.linalg.norm(t2 - t1)**2
   return c*term1 + d*term2
 

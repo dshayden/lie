@@ -1,0 +1,9 @@
+README.rst
+setup.py
+lie/__init__.py
+lie.egg-info/PKG-INFO
+lie.egg-info/SOURCES.txt
+lie.egg-info/dependency_links.txt
+lie.egg-info/not-zip-safe
+lie.egg-info/requires.txt
+lie.egg-info/top_level.txt

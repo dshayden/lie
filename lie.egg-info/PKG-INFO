@@ -1,0 +1,18 @@
+Metadata-Version: 1.1
+Name: lie
+Version: 0.1
+Summary: Lie group and algebra handling
+Home-page: UNKNOWN
+Author: David S. Hayden
+Author-email: dshayden@mit.edu
+License: MIT
+Description: lie
+        --------
+        
+        Lie group and algebra tools
+        
+Keywords: lie group algebra
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 2.7

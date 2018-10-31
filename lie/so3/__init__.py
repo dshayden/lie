@@ -1,18 +1,41 @@
 import numpy as np
-from scipy.linalg import expm, logm
+# from scipy.linalg import expm, logm
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal as mvn
+import lie
 
 dof = 3
 n = 3
 
 G = np.zeros((dof, n, n))
-G[0, 1, 2] = 1
-G[0, 2, 1] = -1
-G[1, 0, 2] = -1
-G[1, 2, 0] = 1
-G[2, 0, 1] = 1
-G[2, 1, 0] = -1
+G[0, 1, 2] = -1
+G[0, 2, 1] = 1
+G[1, 0, 2] = 1
+G[1, 2, 0] = -1
+G[2, 0, 1] = -1
+G[2, 1, 0] = 1
+
+def expm(wx):
+  w = algi(wx)
+  t2 = w.T.dot(w)
+  t = np.sqrt(t2)
+
+  if np.abs(t)<1e-2:
+    stt = lie.TaylorSinXoverX(t)
+    ctt = lie.TaylorOneMinusCosXOverX2(t)
+  else:
+    stt = np.sin(t)/t
+    ctt = (1-np.cos(t))/t2
+
+  return np.eye(3) + stt*wx + ctt*wx.dot(wx)
+
+def logm(R):
+  arg = np.minimum(1.0, np.maximum(-1.0,
+    (np.trace(R)-1)/2.0))
+  t = np.arccos(arg)
+  if np.abs(t)<1e-2: stt = lie.TaylorXoverTwoSinX(t)
+  else: stt = t / (2*np.sin(t))
+  return stt * (R - R.T)
 
 def alg(c):
   """ Return matrix repr. of lie algebra vector c
@@ -35,7 +58,11 @@ def algi(C):
   OUTPUT
     c (ndarray, [3,]): vector of so(3) coefficients.
   """
-  return np.array([ C[2, 1], C[0, 2], C[1, 0] ])
+  return np.array([C[2,1], C[0, 2], C[1,0]])
+
+def inv(X):
+  """ Return X^{-1}. """
+  return X.T
 
 def Adj(X):
   """ Return Adj_X for X an element of SO(3)

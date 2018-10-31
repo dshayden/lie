@@ -1,8 +1,8 @@
 import numpy as np
-from scipy.linalg import expm, logm
 from matplotlib import pyplot as plt
 from scipy.stats import multivariate_normal as mvn
-from .. import so2
+from lie import so2
+import lie
 
 dof = 3
 n = 3
@@ -10,8 +10,45 @@ n = 3
 G = np.zeros((dof, n, n))
 G[0, 0, 2] = 1
 G[1, 1, 2] = 1
-G[2, 0, 1] = -1
-G[2, 1, 0] = 1
+G[2, :2, :2] = so2.G[0]
+
+def expm(C):
+  """ Return exponential map of matrix repr. of algebra vector, c. """
+  t = C[1,0]
+  u = C[:2, 2]
+
+  if np.abs(t)<1e-2:
+    stt = lie.TaylorSinXoverX(t)
+    ctt = lie.TaylorOneMinusCosXOverX(t)
+  else:
+    stt = np.sin(t)/t
+    ctt = (1-np.cos(t))/t
+
+  thetaExp = so2.expm(C[:2,:2])
+
+  V = np.array( [[stt, -ctt], [ctt, stt]] )
+  Vu = V.dot(u)
+  return np.concatenate((
+    np.concatenate((thetaExp, Vu[:,np.newaxis]), axis=1),
+    np.array([[0, 0, 1]])))
+
+def logm(C):
+  """ Return logarithmic map of group element. """
+  tx = so2.logm(C[:2,:2])
+  t = so2.algi(tx)
+  if np.abs(t)<1e-2:  
+    stt = lie.TaylorSinXoverX(t)
+    ctt = lie.TaylorOneMinusCosXOverX(t)
+  else:
+    stt = np.sin(t)/t
+    ctt = (1-np.cos(t))/t
+
+  A = stt; B = ctt
+  Vi = (1 / (A**2 + B**2)) * np.array([[A, B], [-B, A]])
+  d = C[:2,2]
+  u = Vi.dot(d)
+
+  return alg(np.concatenate(( u, [t] )))
 
 def alg(c):
   """ Return matrix repr. of lie algebra vector c
@@ -82,6 +119,9 @@ def plot(X, colors=None, l=1, origin=None, ax=None):
 
   ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], color=colors[0])
   ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], color=colors[1])
+  plt.scatter(x[:,0], x[:,1], s=0)
+
+  ax.set_aspect('equal', 'box')
 
 def rvs(mean=None, cov=np.eye(3)):
   """ Sample SE(2) RV.
@@ -160,7 +200,10 @@ def dist2(X, Y, c=1, d=1):
   R1, t1 = Rt(X)
   R2, t2 = Rt(Y)
   R1i = R1.T
-  term1 = np.linalg.norm(so2.algi(logm(R1i.dot(R2))))**2
+  # import IPython as ip
+  # ip.embed()
+  # term1 = np.linalg.norm(so2.algi(logm(R1i.dot(R2))))**2
+  term1 = np.linalg.norm(so2.algi(so2.logm(R1i.dot(R2))))**2
   term2 = np.linalg.norm(t2 - t1)**2
   return c*term1 + d*term2
 
@@ -181,7 +224,10 @@ def karcher(X, w=None, dst=dist2):
   mu = X[np.random.randint(N)]
   xv = np.zeros((N, dof))
   norm = 1e8
-  while norm > 1e-8:
+
+  cnt = 0
+  # while norm > 1e-8:
+  while norm > 1e-2:
     assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(n)) < 1e-9, 'Not SE(2)'
 
     # Compute distances
@@ -195,4 +241,5 @@ def karcher(X, w=None, dst=dist2):
     newMu = Exp(mu, alg(muAlgebra))
     norm = np.sqrt(dst(mu, newMu))
     mu = newMu
+    cnt = cnt + 1
   return mu
