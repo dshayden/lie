@@ -34,21 +34,59 @@ def expm(C):
 
 def logm(C):
   """ Return logarithmic map of group element. """
-  tx = so2.logm(C[:2,:2])
-  t = so2.algi(tx)
-  if np.abs(t)<1e-2:  
+  theta_x = so2.logm(C[:2,:2])
+  u = getVi(C).dot(C[:2,2])
+  return np.concatenate((
+    np.concatenate(( theta_x, u[:,np.newaxis]), axis=1),
+    [[0, 0, 0]]
+  ))
+
+  # make matrix 
+  # tx = so2.logm(C[:2,:2])
+  # t = so2.algi(tx)
+  # # if np.abs(t)<1e-2:  
+  # #   stt = lie.TaylorSinXoverX(t)
+  # #   ctt = lie.TaylorOneMinusCosXOverX(t)
+  # # else:
+  # #   stt = np.sin(t)/t
+  # #   ctt = (1-np.cos(t))/t
+  # #
+  # # A = stt; B = ctt
+  # # Vi = (1 / (A**2 + B**2)) * np.array([[A, B], [-B, A]])
+  # Vi = getVi(C)
+  #
+  # d = C[:2,2]
+  # u = Vi.dot(d)
+  #
+  # return alg(np.concatenate(( u, [t] )))
+
+def getVi(C):
+  """ Return the V^{-1} matrix computed in log map; C can be SE(2) or SO(2) """
+  t = so2.algi(so2.logm(C[:2,:2]))
+
+  if np.abs(t)<1e-2:
     stt = lie.TaylorSinXoverX(t)
     ctt = lie.TaylorOneMinusCosXOverX(t)
   else:
     stt = np.sin(t)/t
     ctt = (1-np.cos(t))/t
+  V = np.array( [[stt, -ctt], [ctt, stt]] )
+  return np.linalg.inv(V)
 
-  A = stt; B = ctt
-  Vi = (1 / (A**2 + B**2)) * np.array([[A, B], [-B, A]])
-  d = C[:2,2]
-  u = Vi.dot(d)
+  # Vi = np.linalg.inv(V)
+  # return Vi
 
-  return alg(np.concatenate(( u, [t] )))
+  # tx = so2.logm(C[:2,:2])
+  # t = so2.algi(tx)
+  # if np.abs(t)<1e-2:  
+  #   stt = lie.TaylorSinXoverX(t)
+  #   ctt = lie.TaylorOneMinusCosXOverX(t)
+  # else:
+  #   stt = np.sin(t)/t
+  #   ctt = (1-np.cos(t))/t
+  # A = stt; B = ctt
+  # Vi = (1 / (A**2 + B**2)) * np.array([[A, B], [-B, A]])
+  # return Vi
 
 def alg(c):
   """ Return matrix repr. of lie algebra vector c
@@ -105,7 +143,9 @@ def plot(X, colors=None, l=1, origin=None, ax=None):
   if origin is not None: pts = origin
   else: pts = np.array([[0, 0, 1], [l, 0, 1], [0, l, 1]]) # 3 x 3
   if ax is None: ax = plt.gca()
-  x = inv(X).dot(pts.T).T
+  # x = inv(X).dot(pts.T).T
+  x = (X.dot(pts.T)).T
+
   # x = X.dot(pts.T).T
 
   if colors is None:
@@ -119,6 +159,10 @@ def plot(X, colors=None, l=1, origin=None, ax=None):
 
   ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], color=colors[0])
   ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], color=colors[1])
+  # ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], edgecolor=colors[0],
+  #   facecolor='k')
+  # ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], edgecolor=colors[1],
+  #   facecolor='k')
   plt.scatter(x[:,0], x[:,1], s=0)
 
   ax.set_aspect('equal', 'box')

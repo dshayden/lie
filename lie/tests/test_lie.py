@@ -4,6 +4,47 @@ import scipy.linalg as sla, numpy.linalg as nla
 import IPython as ip
 
 class Test(unittest.TestCase):
+  def test_SO2_action(self):
+    m = getattr(lie, 'so2')
+    # pts = np.concatenate((
+    #   np.random.rand(10, 2),
+    #   1e-4*np.random.rand(10, 2),
+    #   1e4*np.random.rand(10,2)), axis=0)
+    pts = np.concatenate((
+      np.random.rand(10, 2),
+      1e-4*np.random.rand(10, 2)), axis=0)
+
+    # exponentiate, check action, log, exponentiate, check action
+    for pt in pts:
+      Pt1 = m.expm(m.alg(pt))
+      Pt2 = m.expm(m.alg(m.algi(m.logm(Pt1))))
+      Pt3 = lie.expm(m.alg(pt))
+      for _pt in pts:
+        _pt1 = Pt1.dot(_pt)
+        _pt2 = Pt2.dot(_pt)
+        _pt3 = Pt3.dot(_pt)
+
+        self.assertTrue(np.allclose(_pt1, _pt2),
+          msg='SO(2): exp(log(exp(x)))*y != exp(x)*y')
+
+        # print(f'{
+        # print(np.linalg.norm(_pt1 - _pt3))
+
+        print(np.linalg.norm(_pt1 - _pt3))
+        self.assertTrue(np.allclose(_pt1, _pt3),
+          msg=f'''SO(2): exp(log(exp(x)))*y != sla.expm(x)*y. 
+            \nx_lhs=\n{Pt1}\nx_rhs=\n{Pt3}\ny={_pt}\n
+            Norm (_pt1 - _pt3)={np.linalg.norm(_pt1 - _pt3)}\n
+            Norm (Pt1 - Pt3)={np.linalg.norm(Pt1 - Pt3)}\n
+            '''
+        )
+
+        # self.assertTrue(np.allclose(_pt1, _pt3),
+        #   msg='''SO(2): exp(log(exp(x)))*y != sla.expm(x)*y. 
+        #     x_lhs=%.2f, x_rhs=%.2f, y=%.2f''' %
+        #     (Pt1, Pt3, _pt)
+        # )
+
   def test_SO2(self):
     eps = 1e-4
     pts = np.array([.1, 0.05, -0.001, -.025, np.pi, 2*np.pi, 2*np.pi-.01,
@@ -83,6 +124,27 @@ class Test(unittest.TestCase):
           msg='SE2 Adj(V)*p != algi(V*alg(p)*V^{-1}) for (pts[%d], pts[%d])' % \
             (idx, idx2) )
 
+  def test_SE2_action(self):
+    m = getattr(lie, 'se2')
+    pts = np.concatenate((
+      np.random.rand(10, 3),
+      1e-4*np.random.rand(10, 3),
+      1e4*np.random.rand(10,3)), axis=0)
+
+    _pts = pts.copy()
+    _pts[:,-1] = 1
+
+    # exponentiate, check action, log, exponentiate, check action
+    for pt in pts:
+      Pt1 = m.expm(m.alg(pt))
+      Pt2 = m.expm(m.alg(m.algi(m.logm(Pt1))))
+      for _pt in _pts:
+        _pt1 = Pt1.dot(_pt)
+        _pt2 = Pt2.dot(_pt)
+
+        self.assertTrue(np.allclose(_pt1, _pt2),
+          msg='SE(2): exp(log(exp(x)))*y != exp(x)*y')
+
   def test_SO3(self):
     m = lie.so3
     eps = 1e-4
@@ -129,6 +191,24 @@ class Test(unittest.TestCase):
         self.assertTrue( nla.norm( ad1 - ad2 ) < eps,
           msg='SO3 Adj(V)*p != algi(V*alg(p)*V^{-1}) for (pts[%d], pts[%d])' % \
             (idx, idx2) )
+
+  def test_SO3_action(self):
+    m = getattr(lie, 'so3')
+    pts = np.concatenate((
+      np.random.rand(10, 3),
+      1e-4*np.random.rand(10, 3),
+      1e4*np.random.rand(10,3)), axis=0)
+
+    # exponentiate, check action, log, exponentiate, check action
+    for pt in pts:
+      Pt1 = m.expm(m.alg(pt))
+      Pt2 = m.expm(m.alg(m.algi(m.logm(Pt1))))
+      for _pt in pts:
+        _pt1 = Pt1.dot(_pt)
+        _pt2 = Pt2.dot(_pt)
+
+        self.assertTrue(np.allclose(_pt1, _pt2),
+          msg='SO(3): exp(log(exp(x)))*y != exp(x)*y')
 
   def test_SE3(self):
     eps = 1e-4

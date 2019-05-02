@@ -15,6 +15,7 @@ G[1, 2, 0] = -1
 G[2, 0, 1] = -1
 G[2, 1, 0] = 1
 
+# looks good
 def expm(wx):
   w = algi(wx)
   t2 = w.T.dot(w)
@@ -30,11 +31,17 @@ def expm(wx):
   return np.eye(3) + stt*wx + ctt*wx.dot(wx)
 
 def logm(R):
+  # arg = (np.trace(R)-1)/2.0
+  # assert arg >= -1 and arg <= 1, 'so3::logm invalid R'
+
+  # why is this here?
+  # here because slight numerical issues can cause trace to be -1 - eps or 1+eps
   arg = np.minimum(1.0, np.maximum(-1.0,
     (np.trace(R)-1)/2.0))
   t = np.arccos(arg)
   if np.abs(t)<1e-2: stt = lie.TaylorXoverTwoSinX(t)
   else: stt = t / (2*np.sin(t))
+
   return stt * (R - R.T)
 
 def alg(c):
@@ -81,7 +88,7 @@ def Adj(X):
   """
   return X
 
-def rvs(mean=None, cov=np.eye(6)):
+def rvs(mean=None, cov=np.eye(3)):
   """ Sample SO(3) RV.
 
   INPUTS

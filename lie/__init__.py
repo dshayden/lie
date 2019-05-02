@@ -28,21 +28,22 @@ def BCH(X, Y):
   Byyx = B(Y, Byx)
   return X + Y + 0.5*Bxy + (1/12.)*(Bxxy + Byyx) - (1/24.)*B(Y, Bxxy)
 
+# good
 def TaylorSinXoverX(x):
-  """ Return 10th order taylor expansion of sin(x)/x """
-  return x/2 - x**3 / 24 + x**5 / 720 - x**7 / 40320 + x**9 / 3628800 \
-    - x**11 / 479001600
+  """ Return taylor expansion of sin(x)/x """
+  return 1 - x**2/6. + x**4/120.
 
 def TaylorOneMinusCosXOverX(x):
   """ Return 10th order taylor expansion of (1-cos(x))/x """
-  return 1 - x**2/6 + x*4/120 - x**6/5040 + x**8/362880 - x**10/39916800 + \
-    x**12 / 6227020800
+  return x/2 - x**3/24 + x**5/720
 
+# good
 def TaylorXoverTwoSinX(x):
   """ Return 10th order taylor expansion of x/(2*sin(x)) """
   return 0.5 + x**2/12. + (7*x**4)/720. + (31*x**6)/30240. + \
     (127*x**8)/1209600. + (73*x**10)/6842880.
 
+# good
 def TaylorOneMinusCosXOverX2(x):
   """ Return 10th order taylor expansion of (1-cos(x))/x^2 """
   return 0.5 - x**2/24. + x**4/720. - x**6/40320. + x**8/3628800. \
@@ -52,6 +53,9 @@ def TaylorOneMinusSinXOverXOverX2(x):
   """ Return 10th order taylor expansion of (1-sin(x)/x)/x^2 """
   return 1/6. - x**2/120. + x**4/5040. - x**6/362880. + x**8/39916800. \
     - x**10 / 6227020800. + x**12/1307674368000.
+
+def TaylorXMinusSinXOverX3(x):
+  """ Return taylor expansion of (x-sin(x))/x^3 """
 
 def modAngle(a):
   a = np.asarray(a)

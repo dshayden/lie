@@ -39,10 +39,11 @@ def algi(C):
   return np.concatenate((u, phi))
 
 def expm(X):
-  wx = X[:3,:3]
-  wx2 = wx.dot(wx)
+  wx = X[:3,:3] # rotation part of matrix
+  wx2 = wx.dot(wx) # squared rotation
 
   w = so3.algi(wx)
+
   t2 = w.T.dot(w)
   t = np.sqrt(t2)
   eye = np.eye(3)
@@ -56,7 +57,7 @@ def expm(X):
     ct = np.cos(t)
     A = st/t
     B = (1-ct)/t2
-    C = (1-A)/t2
+    C = (1 - A)/t2
 
   R = eye + A*wx + B*wx2
   V = eye + B*wx + C*wx2
@@ -68,8 +69,42 @@ def expm(X):
     np.array([[0, 0, 0, 1]])))
 
 def logm(X): 
+  R = X[:3,:3] # rotation part of matrix
+  d = X[:3,3] # translation part of matrix
+
+  Vi = getVi(X)
+  u = Vi.dot(d)
+
+  logR = lie.so3.logm(R) # todo: repeat calculation, how to do only once?
+  return np.concatenate((
+    np.concatenate((logR, u[:,np.newaxis]), axis=1),
+    np.array([[0, 0, 0, 0]])))
+
+
+  # logR = lie.so3.logm(R)
+  # logR2 = logR.dot(logR)
+  # w = lie.so3.algi(logR)
+  # t2 = w.T.dot(w)
+  # t = np.sqrt(t2)
+  #
+  # if t2 < 1e-2:
+  #   A = lie.TaylorSinXoverX(t)
+  #   B = lie.TaylorOneMinusCosXOverX2(t)
+  #   if t2 == 0: coeff = 1 # should this be 1 or 0 or ... ?
+  #   else: coeff = 1/t2
+  # else:
+  #   A = np.sin(t)/t
+  #   B = (1 - np.cos(t))/t2
+  #   coeff = 1/t2
+  #
+  # Vi = np.eye(n-1) - 0.5*logR + coeff*(1 - A/(2*B))*logR2
+  # u = Vi.dot(d)
+  # return np.concatenate((
+  #   np.concatenate((logR, u[:,np.newaxis]), axis=1),
+  #   np.array([[0, 0, 0, 0]])))
+
+def getVi(X):
   R = X[:3,:3]
-  d = X[:3,3]
 
   logR = lie.so3.logm(R)
   logR2 = logR.dot(logR)
@@ -78,20 +113,14 @@ def logm(X):
   t = np.sqrt(t2)
 
   if t2 < 1e-2:
-    A = lie.TaylorSinXoverX(t)
-    B = lie.TaylorOneMinusCosXOverX2(t)
-    if t2 == 0: coeff = 1 # should this be 1 or 0 or ... ?
-    else: coeff = 1/t2
+    coeff = 1/12. + t**2/720. + t**4/30240.
   else:
-    A = np.sin(t)/t
-    B = (1 - np.cos(t))/t2
-    coeff = 1/t2
+    st = np.sin(t)
+    ct = np.cos(t)
+    coeff = (1/t2) * (1 - (st/t)/(2*((1-ct)/t2)))
 
-  Vi = np.eye(n-1) - 0.5*logR + coeff*(1 - A/(2*B))*logR2
-  u = Vi.dot(d)
-  return np.concatenate((
-    np.concatenate((logR, u[:,np.newaxis]), axis=1),
-    np.array([[0, 0, 0, 0]])))
+  Vi = np.eye(n-1) - 0.5*logR + coeff*logR2
+  return Vi
 
 def Adj(X):
   """ Return Adj_X for X an element of SE(3)
