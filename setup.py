@@ -19,7 +19,7 @@ setup(name='lie',
   author='David S. Hayden',
   author_email='dshayden@mit.edu',
   license='MIT',
-  packages=['lie'],
+  packages=['lie', 'lie.so2', 'lie.se2', 'lie.so3', 'lie.se3'],
   install_requires=[
     'numpy', 'scipy', 'matplotlib',
   ],

@@ -1,4 +1,4 @@
-from . import se2, se3, so3
+from . import so2, se2, se3, so3
 from scipy.linalg import expm, logm
 import numpy as np
 
