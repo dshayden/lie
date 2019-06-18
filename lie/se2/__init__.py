@@ -60,7 +60,7 @@ def logm(C):
   #
   # return alg(np.concatenate(( u, [t] )))
 
-def getVi(C):
+def getVi(C, return_phi=False):
   """ Return the V^{-1} matrix computed in log map; C can be SE(2) or SO(2) """
   t = so2.algi(so2.logm(C[:2,:2]))
 
@@ -71,22 +71,11 @@ def getVi(C):
     stt = np.sin(t)/t
     ctt = (1-np.cos(t))/t
   V = np.array( [[stt, -ctt], [ctt, stt]] )
-  return np.linalg.inv(V)
+  Vi = np.linalg.inv(V)
 
-  # Vi = np.linalg.inv(V)
-  # return Vi
+  if return_phi: return Vi, t
+  else: return Vi
 
-  # tx = so2.logm(C[:2,:2])
-  # t = so2.algi(tx)
-  # if np.abs(t)<1e-2:  
-  #   stt = lie.TaylorSinXoverX(t)
-  #   ctt = lie.TaylorOneMinusCosXOverX(t)
-  # else:
-  #   stt = np.sin(t)/t
-  #   ctt = (1-np.cos(t))/t
-  # A = stt; B = ctt
-  # Vi = (1 / (A**2 + B**2)) * np.array([[A, B], [-B, A]])
-  # return Vi
 
 def alg(c):
   """ Return matrix repr. of lie algebra vector c
