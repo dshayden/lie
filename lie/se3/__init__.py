@@ -103,7 +103,7 @@ def logm(X):
   #   np.concatenate((logR, u[:,np.newaxis]), axis=1),
   #   np.array([[0, 0, 0, 0]])))
 
-def getVi(X):
+def getVi(X, return_phi=False):
   R = X[:3,:3]
 
   logR = lie.so3.logm(R)
@@ -120,7 +120,8 @@ def getVi(X):
     coeff = (1/t2) * (1 - (st/t)/(2*((1-ct)/t2)))
 
   Vi = np.eye(n-1) - 0.5*logR + coeff*logR2
-  return Vi
+  if return_phi: return Vi, t
+  else: return Vi
 
 def Adj(X):
   """ Return Adj_X for X an element of SE(3)
