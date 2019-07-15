@@ -120,7 +120,8 @@ def getVi(X, return_phi=False):
     coeff = (1/t2) * (1 - (st/t)/(2*((1-ct)/t2)))
 
   Vi = np.eye(n-1) - 0.5*logR + coeff*logR2
-  if return_phi: return Vi, t
+
+  if return_phi: return Vi, w
   else: return Vi
 
 def Adj(X):
