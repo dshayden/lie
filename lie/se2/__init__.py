@@ -12,6 +12,23 @@ G[0, 0, 2] = 1
 G[1, 1, 2] = 1
 G[2, :2, :2] = so2.G[0]
 
+def expmP(C):
+  """ Return psuedo exponential map of matrix repr. of algebra vector, c. """
+  thetaExp = so2.expm(C[:2,:2])
+  u = C[:2, 2]
+  return np.concatenate((
+    np.concatenate((thetaExp, u[:,np.newaxis]), axis=1),
+    np.array([[0, 0, 1]])))
+
+def logmP(C):
+  """ Return pseudo logarithmic map of group element. """
+  theta_x = so2.logm(C[:2,:2])
+  u = C[:2,2]
+  return np.concatenate((
+    np.concatenate(( theta_x, u[:,np.newaxis]), axis=1),
+    [[0, 0, 0]]
+  ))
+
 def expm(C):
   """ Return exponential map of matrix repr. of algebra vector, c. """
   t = C[1,0]
@@ -119,7 +136,7 @@ def Adj(X):
   A[1,2] = -X[0,2]
   return A
 
-def plot(X, colors=None, l=1, origin=None, ax=None):
+def plot(X, colors=None, l=1, origin=None, ax=None, linestyle='-'):
   """ Plot SE2 transformation X acting on origin.
 
   INPUT
@@ -146,8 +163,8 @@ def plot(X, colors=None, l=1, origin=None, ax=None):
     blue = np.maximum([0, 0, 0], np.minimum(blue, [1,1,1]))
     colors = np.stack((red,blue))
 
-  ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], color=colors[0])
-  ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], color=colors[1])
+  ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], color=colors[0], linestyle=linestyle)
+  ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], color=colors[1], linestyle=linestyle)
   # ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], edgecolor=colors[0],
   #   facecolor='k')
   # ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], edgecolor=colors[1],
@@ -261,7 +278,10 @@ def karcher(X, w=None, dst=dist2):
   cnt = 0
   # while norm > 1e-8:
   while norm > 1e-2:
-    assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(n)) < 1e-9, 'Not SE(2)'
+    # print(norm)
+    # print(np.linalg.norm(mu.dot(inv(mu)) - np.eye(n)))
+    assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(n)) < 1e-2, 'Not SE(2)'
+    # assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(n)) < 1e-9, 'Not SE(2)'
 
     # Compute distances
     D = 0

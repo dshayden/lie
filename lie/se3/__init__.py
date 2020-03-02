@@ -12,6 +12,23 @@ G = np.zeros((dof, n, n))
 for i in range(3): G[i,i,3] = 1
 G[3:, :3, :3] = so3.G
 
+def expmP(C):
+  """ Return psuedo exponential map of matrix repr. of algebra vector, c. """
+  thetaExp = so3.expm(C[:2,:2])
+  u = C[:3, 3]
+  return np.concatenate((
+    np.concatenate((thetaExp, u[:,np.newaxis]), axis=1),
+    np.array([[0, 0, 1]])))
+
+def logmP(C):
+  """ Return pseudo logarithmic map of group element. """
+  theta_x = so3.logm(C[:2,:2])
+  u = C[:3,3]
+  return np.concatenate((
+    np.concatenate(( theta_x, u[:,np.newaxis]), axis=1),
+    [[0, 0, 0]]
+  ))
+
 def alg(c):
   """ Return matrix repr. of lie algebra vector c
 
@@ -247,7 +264,8 @@ def karcher(X, w=None, dst=dist2):
   norm = 1e8
   cnt = 0
   while norm > 1e-8:
-    assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(4)) < 1e-9, 'Not SE(3)'
+    # assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(4)) < 1e-9, 'Not SE(3)'
+    assert np.linalg.norm(mu.dot(inv(mu)) - np.eye(4)) < 1e-2, 'Not SE(3)'
 
     # Compute distances
     D = 0
