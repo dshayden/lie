@@ -165,10 +165,6 @@ def plot(X, colors=None, l=1, origin=None, ax=None, linestyle='-'):
 
   ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], color=colors[0], linestyle=linestyle)
   ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], color=colors[1], linestyle=linestyle)
-  # ax.arrow(x[0,0], x[0,1], x[1,0]-x[0,0], x[1,1]-x[0,1], edgecolor=colors[0],
-  #   facecolor='k')
-  # ax.arrow(x[0,0], x[0,1], x[2,0]-x[0,0], x[2,1]-x[0,1], edgecolor=colors[1],
-  #   facecolor='k')
   plt.scatter(x[:,0], x[:,1], s=0)
 
   ax.set_aspect('equal', 'box')
